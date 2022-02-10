@@ -1,0 +1,16 @@
+:host {
+    padding: 5px;
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+app-tile {
+    position: fixed;
+}

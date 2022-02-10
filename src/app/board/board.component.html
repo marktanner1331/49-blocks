@@ -1,0 +1,7 @@
+<!-- <img src="https://www.publicflash.com/preview/photo/303/media/amateur-flashing-015.jpg" /> -->
+
+<ng-container *ngFor="let column of range(gridWidth)">
+    <ng-container *ngFor="let row of range(gridHeight)">
+        <app-tile (click)="tileClicked(column, row)" [style.left]="'calc(' + column + ' * ' + tileSize() + ')'" [style.bottom]="'calc(' + row + ' * ' + tileSize() + ')'" [size]="tileSize()" [tileColor]="tileAt(column, row)" [ngClass]="getCollapseClass(column, row)"></app-tile>
+    </ng-container>
+</ng-container>
