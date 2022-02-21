@@ -1,0 +1,33 @@
+{
+    "short_name": "49Blocks",
+    "name": "49 Blocks",
+    "icons": [{
+            "src": "/assets/icons/icon-192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "/assets/icons/icon-512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": "/",
+    "background_color": "#222",
+    "display": "fullscreen",
+    "scope": "/",
+    "theme_color": "#222",
+    "shortcuts": [],
+    "description": "49 Blocks puzzle game.",
+    "screenshots": [{
+            "src": "/assets/screenshots/screenshot1.png",
+            "type": "image/png",
+            "sizes": "540x720"
+        },
+        {
+            "src": "/assets/screenshots/screenshot2.png",
+            "type": "image/jpg",
+            "sizes": "540x720"
+        }
+    ]
+}

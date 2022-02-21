@@ -1,0 +1,15 @@
+<ng-container *ngIf="visible">
+    <div id="blocker">
+    </div>
+    <div id="dialog">
+        <h2>Game Over</h2>
+        <div class="starContainer">
+            <img *ngFor="let i of starCount" src="assets/fullStar.svg" />
+            <img *ngFor="let i of invertedStarCount" src="assets/emptyStar.svg" />
+        </div>
+        <h3>Remaining Blocks: {{remainingBlocks}}</h3>
+        <button class="button" (click)="onReplayClick()">Replay</button>
+        <button class="button" (click)="onNextClick()" [disabled]="!canMoveNext">Next Level</button>
+        <button class="button" (click)="onBackClick()">Choose Level</button>
+    </div>
+</ng-container>

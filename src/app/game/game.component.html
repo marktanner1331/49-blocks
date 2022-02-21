@@ -1,1 +1,8 @@
-<app-board></app-board>
+<div id="top" #top [style.width]="boardSize">
+    <span>{{remainingCount}} Blocks</span>
+    <button [disabled]="!board.canUndo" (click)="undo()" class="button">Undo Last Move</button>
+</div>
+<div id="bottom" [style.width]="boardSize" [style.height]="boardSize">
+    <app-board #board></app-board>
+</div>
+<app-game-over></app-game-over>

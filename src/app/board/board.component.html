@@ -1,7 +1,17 @@
-<!-- <img src="https://www.publicflash.com/preview/photo/303/media/amateur-flashing-015.jpg" /> -->
+<!-- <img src="https://www.publicflash.com/preview/photo/303/media/amateur-flashing-0{{imageIndex}}.jpg" /> -->
 
-<ng-container *ngFor="let column of range(gridWidth)">
-    <ng-container *ngFor="let row of range(gridHeight)">
-        <app-tile (click)="tileClicked(column, row)" [style.left]="'calc(' + column + ' * ' + tileSize() + ')'" [style.bottom]="'calc(' + row + ' * ' + tileSize() + ')'" [size]="tileSize()" [tileColor]="tileAt(column, row)" [ngClass]="getCollapseClass(column, row)"></app-tile>
+<ng-container *ngIf="newGameAnimation">
+    <ng-container *ngFor="let column of range(gridWidth)">
+        <ng-container *ngFor="let row of range(gridHeight)">
+            <app-tile (click)="tileClicked(column, row)" [style.left]="'calc(' + column + ' * ' + tileSize + ')'" [style.bottom]="'calc(' + 999 + ' * ' + tileSize + ')'" [size]="tileSize" [tileColor]="tileAt(column, row)" [ngClass]="getClasses(column, row)"></app-tile>
+        </ng-container>
+    </ng-container>
+</ng-container>
+<ng-container *ngIf="!newGameAnimation">
+    <ng-container *ngFor="let column of range(gridWidth)">
+        <ng-container *ngFor="let row of range(gridHeight)">
+            <app-tile *ngIf="tileAt(column, row) != TileColor.EMPTY" (click)="tileClicked(column, row)" [style.left]="'calc(' + column + ' * ' + tileSize + ')'" [style.bottom]="'calc(' + row + ' * ' + tileSize + ')'" [size]="tileSize" [tileColor]="tileAt(column, row)"
+                [ngClass]="getClasses(column, row)"></app-tile>
+        </ng-container>
     </ng-container>
 </ng-container>

@@ -27,13 +27,13 @@ export class TileComponent implements OnInit {
       case TileColor.EMPTY:
         return "none";
       case TileColor.BLUE:
-        return "radial-gradient(#0000ee, #0000aa)";
+        return "radial-gradient(#2291ff, #0051a2)";
       case TileColor.RED:
-        return "radial-gradient(#ee0000, #aa0000)";
+        return "radial-gradient(#ff3c9d, #a20051)";
       case TileColor.GREEN:
-        return "radial-gradient(#00ee00, #00aa00)";
-      case TileColor.YELLOW:
-        return "radial-gradient(#eeee00, #aaaa00)";
+        return "radial-gradient(#9dff3c, #51a200)";
+      // case TileColor.YELLOW:
+      //   return "radial-gradient(#eeee00, #aaaa00)";
       default:
         throw new Error();
     }

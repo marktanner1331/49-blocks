@@ -1,38 +1,72 @@
 import { Injectable } from '@angular/core';
 import { Game } from '../models/game';
 import { GameCommand, GameCommandType } from '../models/game-command';
+import { Grid } from '../models/Grid';
+import { SyncSubject } from '../models/sync-subject';
+import { SyncSubscription } from '../models/sync-subscription';
+import { TileClickedHandler } from './tile-clicked-handler';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CurrentGameService {
-  currentGame: Game;
+  currentGame!: Game;
 
-  idleCounter: number = 0;
+  private idleCounter: number = 0;
 
-  idle: (() => void)[] = [];
+  idle: SyncSubject<void> = new SyncSubject();
 
-  preProcess: ((command: GameCommand) => void)[] = [];
-  postProcess: ((command: GameCommand) => void)[] = [];
+  postProcess: SyncSubject<GameCommand> = new SyncSubject();
 
   commandQueue: GameCommand[] = [];
-  isProcessing: boolean = false;
+  private isProcessing: boolean = false;
+  isBoardInited: boolean = false;
+
+  tileClickedHandler: TileClickedHandler;
+
+  previousGrid?: Grid;
 
   constructor() {
-    this.currentGame = new Game(16, 8, 1);
-    console.log("best solution: " + this.currentGame.grid.findBestSolution());
+    this.tileClickedHandler = new TileClickedHandler(this);
+    this.tileClickedHandler.register();
 
-    this.postProcess.push(x => this.test(x));
-    this.idle.push(() => this.testIdle());
+    this.postProcess.subscribe(x => this.removeGroupHandler(x));
+    this.postProcess.subscribe(x => this.undoHandler(x));
+    this.idle.subscribe(() => this.gameOverHandler());
+  }
+
+  boardInited() {
+    this.isBoardInited = true;
+    if(this.commandQueue.length) {
+      this.processCommand();
+    }
+  }
+
+  boardDestroyed() {
+    this.isBoardInited = false;
+  }
+
+  newGame(level:number) {
+    this.currentGame = new Game(7, 7, level);
+    this.pushCommand(new GameCommand(GameCommandType.NEW_GAME));
+  }
+
+  replay() {
+    this.currentGame = new Game(7, 7, this.currentGame.levelNumber);
+    this.pushCommand(new GameCommand(GameCommandType.NEW_GAME));
   }
 
   pushCommand(command: GameCommand) {
     console.log("Pushing Command: " + command.toString());
     this.commandQueue.push(command);
 
-    if (this.isProcessing == false) {
+    if (this.isProcessing == false && this.isBoardInited) {
       this.processCommand();
     }
+  }
+
+  isIdle() {
+    return this.idleCounter == 0 && this.isProcessing == false;
   }
 
   processCommand() {
@@ -42,45 +76,33 @@ export class CurrentGameService {
       let command: GameCommand = this.commandQueue.shift()!;
       console.log("Processing Command: " + command.toString());
 
-      for (let callback of this.preProcess) {
-        callback(command);
-      }
+      // for (let callback of this.preProcess) {
+      //   callback(command);
+      // }
 
       //this.currentGame.processCommand(command);
 
       switch (command.type) {
-        case GameCommandType.ANIMATING_COLLAPSE_STARTED:
+        case GameCommandType.BOARD_ANIMATION_STARTED:
+        case GameCommandType.GAME_COMPLETE:
           this.idleCounter++;
           break;
-        case GameCommandType.ANIMATING_COLLAPSE_FINISHED:
+        case GameCommandType.BOARD_ANIMATION_FINISHED:
           this.idleCounter--;
+          break;
+        case GameCommandType.NEW_GAME:
+          this.idleCounter = 0;
           break;
       }
 
-      // switch (command.type) {
-      //   case GameCommandType.MOVED:
-      //     if (this.currentGame.isComplete()) {
-      //       this.commandQueue.length = 0;
-      //       this.pushCommand(new GameCommand(GameCommandType.GAME_COMPLETE, this.currentGame.getWinningPlayer()));
+      this.postProcess.next(command);
 
-      //       //we don't want the idle event firing
-      //       this.idleCounter++;
-      //       continue;
-      //     }
-      //     break;
-      // }
-
-      for (let callback of this.postProcess) {
-        callback(command);
-      }
 
       if (this.commandQueue.length == 0) {
         console.log("idle counter: " + this.idleCounter);
         if (this.idleCounter == 0) {
           console.log("idle");
-          for (let callback of this.idle) {
-            callback();
-          }
+          this.idle.next();
         }
       }
     }
@@ -88,55 +110,50 @@ export class CurrentGameService {
     this.isProcessing = false;
   }
 
-  phase: number = 0;
-  currentGroup: [number, number][] = [];
-  test(command: GameCommand) {
-    switch (command.type) {
-      case GameCommandType.TILE_CLICKED:
-        {
-          let column = command.data[0];
-          let row = command.data[1];
-
-          this.currentGroup = this.currentGame.grid.getColorGroup(column, row);
-          if (this.currentGroup.length < 3) {
-            return;
-          }
-
-          this.phase = 1;
-          this.pushCommand(new GameCommand(GameCommandType.HIGHLIGHT_GROUP, this.currentGroup));
-        }
+  undoHandler(command: GameCommand) {
+    if(command.type == GameCommandType.UNDO) {
+      this.currentGame.grid = this.previousGrid!;
+      this.previousGrid = undefined;
+    } else if(command.type == GameCommandType.NEW_GAME) {
+      this.previousGrid = undefined;
     }
   }
 
-  testIdle() {
-    switch (this.phase) {
-      case 1:
-        this.phase = 2;
-        this.currentGame.grid.removeGroup(this.currentGroup);
-        this.pushCommand(new GameCommand(GameCommandType.GROUP_REMOVED));
-        break;
-      case 2:
-        this.phase = 3;
-        this.currentGame.grid.collapseGridDown();
-        this.pushCommand(new GameCommand(GameCommandType.GRID_COLLAPSED_DOWN));
+  removeGroupHandler(command: GameCommand) {
+    if (command.type == GameCommandType.REMOVE_GROUP) {
+      let collapseDown = (x: GameCommand) => {
+        if (x.type == GameCommandType.BOARD_ANIMATION_FINISHED) {
+          subscription.unsubscribe();
+          subscription = this.postProcess.subscribe(x => collapseLeft(x));
 
-        break;
-      case 3:
-        this.phase = 4;
-        if(this.currentGame.grid.gridHasEmptyColumns()) {
-          this.currentGame.grid.collapseGridLeft();
-          this.pushCommand(new GameCommand(GameCommandType.GRID_COLLAPSED_LEFT));
-        } else {
-          this.pushCommand(new GameCommand(GameCommandType.NOP));
+          this.currentGame.grid.collapseGridDown();
+          this.pushCommand(new GameCommand(GameCommandType.GRID_COLLAPSED_DOWN));
         }
-        break;
-      case 4:
-        this.phase = 0;
-        console.log("remaining blocks: " + this.currentGame.grid.countRemainingBlocks());
-        if(this.currentGame.grid.isComplete()) {
-          this.pushCommand(new GameCommand(GameCommandType.GAME_COMPLETE));
+      };
+
+      let collapseLeft = (x: GameCommand) => {
+        if (x.type == GameCommandType.BOARD_ANIMATION_FINISHED) {
+          subscription.unsubscribe();
+
+          if (this.currentGame.grid.gridHasEmptyColumns()) {
+            this.currentGame.grid.collapseGridLeft();
+            this.pushCommand(new GameCommand(GameCommandType.GRID_COLLAPSED_LEFT));
+          }
         }
-        break;
+      };
+
+      let subscription: SyncSubscription<GameCommand> = this.postProcess.subscribe(x => collapseDown(x));
+
+      this.previousGrid = this.currentGame.grid.clone();
+      this.currentGame.grid.removeGroup(command.data);
+      this.pushCommand(new GameCommand(GameCommandType.GROUP_REMOVED));
+    }
+  }
+
+  gameOverHandler(): void {
+    console.log("remaining blocks: " + this.currentGame.grid.countRemainingBlocks());
+    if (this.currentGame.grid.isComplete()) {
+      this.pushCommand(new GameCommand(GameCommandType.GAME_COMPLETE));
     }
   }
 }

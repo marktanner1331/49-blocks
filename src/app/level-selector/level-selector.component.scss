@@ -1,0 +1,58 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-bottom: 10px;
+}
+
+#container {
+    display: flex;
+    flex-wrap: wrap;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.level {
+    color: #eee;
+    width: calc(12.5% - 11px);
+    flex-grow: 1;
+    margin: 5px;
+    background-color: darkgoldenrod;
+    padding: 5px;
+    border-radius: 3px;
+    &>.header {
+        width: 100%;
+        text-align: center;
+    }
+    &>.starContainer {
+        display: flex;
+        margin: 5px 0 10px 0;
+        height: 15px;
+        justify-content: center;
+        &>img {
+            margin: 1px;
+        }
+    }
+    &>button {
+        margin: auto;
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .level {
+        width: calc(20% - 12px);
+    }
+}
+
+@media screen and (max-width: 450px) {
+    .level {
+        width: calc(25% - 12.5px);
+    }
+}
+
+@media screen and (max-width: 320px) {
+    .level {
+        width: calc(33% - 13.5px);
+    }
+}

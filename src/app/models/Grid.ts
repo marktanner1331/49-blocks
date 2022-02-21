@@ -8,7 +8,7 @@ export class Solution {
     previous?: Solution;
 }
 
-class GridSetOld {
+class GridSet {
     data: {[key: number]: any } = {};
 
     add(grid: Grid) {
@@ -53,22 +53,6 @@ class GridSetOld {
     }
 }
 
-class GridSet {
-    data: {[key: string]: boolean } = {};
-
-    add(grid: Grid) {
-        this.data[this.hashGrid(grid)] = true;
-    }
-
-    contains(grid: Grid): boolean {
-        return this.data[this.hashGrid(grid)];
-    }
-
-    hashGrid(grid: Grid):string {
-        return grid.tiles.map(x => x.join()).join();
-    }
-}
-
 export class Grid {
     constructor(public width: number, public height: number, public tiles: TileColor[][]) {
     }
@@ -94,7 +78,7 @@ export class Grid {
 
             let grid = grids.pop()!;
 
-            let groups = grid[0].getAllColorGroupSeeds();
+            let groups = grid[0].getAllColorGroups();
             if(groups.length == 0) {
                 //we have reached the end
                 if(grid[0].countRemainingBlocks() < bestScore) {
@@ -107,25 +91,30 @@ export class Grid {
             
             for(let group of groups) {
                 let subGrid = grid[0].clone();
-                subGrid.removeGroup(this.getColorGroup(group[0], group[1]));
+                subGrid.removeGroup(group.tiles);
                 subGrid.collapseGridDown();
-                subGrid.collapseGridLeft();
-                
+
+                //technically we could have two identical grids
+                //with the only difference being an empty column in the middle
+                //but in reality
+                //it's not gonna happen all that often
                 if(gridSet.contains(subGrid)) {
                     continue;
                 }
 
+                subGrid.collapseGridLeft();
+                
                 gridSet.add(subGrid);
 
                 let newSolution: Solution = new Solution();
                 newSolution.previous = grid[1];
-                newSolution.column = group[0];
-                newSolution.row = group[1];
+                newSolution.column = group.seedColumn
+                newSolution.row = group.seedRow;
                 grids.push([subGrid, newSolution]);
             }
         }
         
-        console.log(j);
+        //console.log(j);
         let route: [number, number][] = [];
         while(bestSolution != undefined) {
             route.push([bestSolution.column, bestSolution.row]);
@@ -184,24 +173,25 @@ export class Grid {
         let width = this.width;
         for (let column = 0; column < width; column++) {
             if (_.every(this.tiles[column], x => x == TileColor.EMPTY)) {
-                this.tiles.splice(column, 1);
-                this.tiles.push(Array(this.height).fill(TileColor.EMPTY));
+                this.tiles.push(this.tiles.splice(column, 1)[0]);
                 column--;
                 width--;
             }
         }
     }
 
-    getTileDeltasForGridCollapseLeft(): [number, number, number][] {
-        let deltas: [number, number, number][] = [];
-
+    getTileDeltasForGridCollapseLeft(): {[key: number]: number} {
+        let deltas: {[key: number]: number} = {};
+        let i = 0;
         let delta = 0;
         for (let column = 0; column < this.width; column++) {
             if (_.every(this.tiles[column], x => x == TileColor.EMPTY)) {
                 delta++;
+                i += this.height;
             } else {
                 for (let row = 0; row < this.height; row++) {
-                    deltas.push([column, row, -delta]);
+                    deltas[i] = -delta;
+                    i++;
                 }
             }
         }
@@ -209,19 +199,22 @@ export class Grid {
         return deltas;
     }
 
-    getTileDeltasForGridCollapseDown(): [number, number, number][] {
-        let deltas: [number, number, number][] = [];
+    getTileDeltasForGridCollapseDown(): {[key: number]: number} {
+        let deltas: {[key: number]: number} = {};
 
+        let i = 0;
         for (let column = 0; column < this.width; column++) {
             let base = 0;
             for (let row = 0; row < this.height; row++) {
                 if (this.tiles[column][row] != TileColor.EMPTY) {
                     if (row != base) {
-                        deltas.push([column, row, base - row]);
+                        deltas[i] = base - row;
                     }
 
                     base++;
                 }
+
+                i++;
             }
         }
 
@@ -239,7 +232,7 @@ export class Grid {
     }
 
     getAllColorGroups(): ColorGroup[] {
-        let explored: { [key: string]: boolean } = {};
+        let explored: { [key: number]: boolean } = {};
 
         let explore = (seedColumn: number, seedRow: number): ColorGroup => {
             let toExplore: [number, number][] = [[seedColumn, seedRow]];
@@ -249,45 +242,34 @@ export class Grid {
             colorGroup.seedColumn = seedColumn;
             colorGroup.seedRow = seedRow;
             
-            // initialize with max values
-            colorGroup.bottom = this.height;
-            colorGroup.top = 0;
-            colorGroup.left = this.width;
-            colorGroup.right = 0;
-
             while (toExplore.length > 0) {
                 let tile = toExplore.pop()!;
                 let column = tile[0];
                 let row = tile[1];
 
                 colorGroup.tiles.push(tile);
-                colorGroup.top = Math.max(colorGroup.top, row);
-                colorGroup.bottom = Math.min(colorGroup.bottom, row);
-                colorGroup.right = Math.max(colorGroup.right, column);
-                colorGroup.left = Math.min(colorGroup.left, column);
-
-                explored[`${column}, ${row}`] = true;
+                explored[column * this.height + row] = true;
 
                 if (column > 0) {
-                    if (this.tiles[column - 1][row] == seedColor && explored[`${column - 1}, ${row}`] == undefined) {
+                    if (this.tiles[column - 1][row] == seedColor && explored[(column - 1) * this.height + row] == undefined) {
                         toExplore.push([column - 1, row]);
                     }
                 }
 
                 if (column < this.width - 1) {
-                    if (this.tiles[column + 1][row] == seedColor && explored[`${column + 1}, ${row}`] == undefined) {
+                    if (this.tiles[column + 1][row] == seedColor && explored[(column + 1) * this.height + row] == undefined) {
                         toExplore.push([column + 1, row]);
                     }
                 }
 
                 if (row > 0) {
-                    if (this.tiles[column][row - 1] == seedColor && explored[`${column}, ${row - 1}`] == undefined) {
+                    if (this.tiles[column][row - 1] == seedColor && explored[column * this.height + row - 1] == undefined) {
                         toExplore.push([column, row - 1]);
                     }
                 }
 
                 if (row < this.height - 1) {
-                    if (this.tiles[column][row + 1] == seedColor && explored[`${column}, ${row + 1}`] == undefined) {
+                    if (this.tiles[column][row + 1] == seedColor && explored[column * this.height + row + 1] == undefined) {
                         toExplore.push([column, row + 1]);
                     }
                 }
@@ -304,7 +286,7 @@ export class Grid {
                 }
 
                 //it belongs to a previously explored group
-                if (explored[`${i}, ${j}`] != undefined) {
+                if (explored[i * this.height + j] != undefined) {
                     continue;
                 }
 
@@ -498,8 +480,4 @@ class ColorGroup {
     seedColumn!: number;
     seedRow!: number;
     tiles:[number, number][] = [];
-    left!: number;
-    right!: number;
-    top!: number;
-    bottom!: number;
 }

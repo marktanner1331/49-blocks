@@ -6,7 +6,9 @@ export class RNG {
     }
 
     skip(n: number) {
-        Array(n).forEach(() => this.nextRand());
+        for(let i = 0;i < n;i++) {
+            this.nextRand();
+        }
     }
 
     nextRand() {

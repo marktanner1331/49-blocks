@@ -1,0 +1,11 @@
+<h1>Levels</h1>
+<div id="container">
+    <div class="level" *ngFor="let n of getRange()">
+        <div class="header">Level {{n}}</div>
+        <div class="starContainer">
+            <img *ngFor="let i of starCount(n)" src="assets/fullStar.svg" />
+            <img *ngFor="let i of invertedStarCount(n)" src="assets/emptyStar.svg" />
+        </div>
+        <button class="button" [disabled]="!isPlayable(n)" (click)="play(n)">Play</button>
+    </div>
+</div>
