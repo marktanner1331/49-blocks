@@ -1,6 +1,8 @@
-# ColorConnect
+# 49 Blocks aka 'color connect'
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.2.10.
+A little game on the Android play store: https://play.google.com/store/apps/details?id=com.fortynineblocks.twa&hl=en&gl=US
+
+Written in Angular
 
 ## Development server
 
