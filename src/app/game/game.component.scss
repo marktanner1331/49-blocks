@@ -24,14 +24,24 @@
     flex-direction: row;
     margin: auto;
     margin-bottom: 0;
+    position: relative;
+    overflow: visible;
     &>span {
         white-space: nowrap;
         font-size: 150%;
         text-align: center;
         display: block;
-        margin-right: auto;
+        margin: auto auto auto 0;
     }
-    &>button {
+    &>img {
         float: right;
+        cursor: pointer;
+    }
+    &>div {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        z-index: 1;
+        &>app-burger-menu {}
     }
 }

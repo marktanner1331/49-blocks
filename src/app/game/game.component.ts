@@ -13,6 +13,7 @@ import { ResizeService } from '../services/resize.service';
 export class GameComponent implements OnInit, OnDestroy {
   remainingCount: number = 0;
   boardSize:string = "100%";
+  showMenu: boolean = false;
 
   @ViewChild("top") top?: ElementRef;
 
@@ -23,8 +24,16 @@ export class GameComponent implements OnInit, OnDestroy {
     currentGameService.postProcess.subscribe(x => this.processCommand(x));
   }
 
-  undo() {
-    this.currentGameService.pushCommand(new GameCommand(GameCommandType.UNDO));
+  get level():number {
+    return this.currentGameService.currentGame?.levelNumber ?? 0;
+  }
+
+  onMenuClick() {
+    this.showMenu = true;
+  }
+
+  onMenuDone() {
+    this.showMenu = false;
   }
 
   resize() {
@@ -60,6 +69,7 @@ export class GameComponent implements OnInit, OnDestroy {
       case GameCommandType.NEW_GAME:
       case GameCommandType.REMOVE_GROUP:
       case GameCommandType.UNDO:
+      case GameCommandType.RESET:
         this.remainingCount = this.currentGameService.currentGame.grid.countRemainingBlocks();
         break;
     }

@@ -1,0 +1,7 @@
+<div id="blocker" (click)="blockerClick()"></div>
+<div id="items">
+    <span [class.disabled]="!canUndo" (click)="undo()">Undo</span>
+    <span (click)="hint()">Hint</span>
+    <span (click)="reset()">Reset</span>
+    <span (click)="home()">Home</span>
+</div>

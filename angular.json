@@ -32,9 +32,13 @@
                             "src/manifest.json"
                         ],
                         "styles": [
+                            "node_modules/ngx-sharebuttons/themes/circles.scss",
+                            "node_modules/ngx-sharebuttons/themes/modern.scss",
                             "src/styles.scss"
                         ],
-                        "scripts": []
+                        "scripts": [],
+                        "serviceWorker": true,
+                        "ngswConfigPath": "ngsw-config.json"
                     },
                     "configurations": {
                         "production": {
@@ -94,9 +98,12 @@
                         "inlineStyleLanguage": "scss",
                         "assets": [
                             "src/favicon.ico",
-                            "src/assets"
+                            "src/assets",
+                            "src/manifest.json"
                         ],
                         "styles": [
+                            "node_modules/ngx-sharebuttons/themes/circles.scss",
+                            "node_modules/ngx-sharebuttons/themes/modern.scss",
                             "src/styles.scss"
                         ],
                         "scripts": []

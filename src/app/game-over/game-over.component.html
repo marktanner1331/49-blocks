@@ -4,8 +4,8 @@
     <div id="dialog">
         <h2>Game Over</h2>
         <div class="starContainer">
-            <img *ngFor="let i of starCount" src="assets/fullStar.svg" />
-            <img *ngFor="let i of invertedStarCount" src="assets/emptyStar.svg" />
+            <img *ngFor="let i of starCount" src="assets/images/fullStar.svg" />
+            <img *ngFor="let i of invertedStarCount" src="assets/images/emptyStar.svg" />
         </div>
         <h3>Remaining Blocks: {{remainingBlocks}}</h3>
         <button class="button" (click)="onReplayClick()">Replay</button>

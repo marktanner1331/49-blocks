@@ -1,6 +1,10 @@
 <div id="top" #top [style.width]="boardSize">
-    <span>{{remainingCount}} Blocks</span>
-    <button [disabled]="!board.canUndo" (click)="undo()" class="button">Undo Last Move</button>
+    <span>Level {{level}}</span>
+    <img (click)="onMenuClick()" src="assets/images/burger.svg" />
+    <div *ngIf="showMenu">
+        <app-burger-menu (done)="onMenuDone()">
+        </app-burger-menu>
+    </div>
 </div>
 <div id="bottom" [style.width]="boardSize" [style.height]="boardSize">
     <app-board #board></app-board>

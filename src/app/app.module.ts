@@ -9,6 +9,13 @@ import { TileComponent } from './tile/tile.component';
 import { MainMenuComponent } from './main-menu/main-menu.component';
 import { LevelSelectorComponent } from './level-selector/level-selector.component';
 import { GameOverComponent } from './game-over/game-over.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
+import { HelpComponent } from './help/help.component';
+import { BurgerMenuComponent } from './burger-menu/burger-menu.component';
+import { ShareComponent } from './share/share.component';
+import { ShareButtonsModule } from 'ngx-sharebuttons/buttons';
+import { ShareIconsModule } from 'ngx-sharebuttons/icons';
 
 @NgModule({
   declarations: [
@@ -18,11 +25,22 @@ import { GameOverComponent } from './game-over/game-over.component';
     TileComponent,
     MainMenuComponent,
     LevelSelectorComponent,
-    GameOverComponent
+    GameOverComponent,
+    HelpComponent,
+    BurgerMenuComponent,
+    ShareComponent
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: environment.production,
+      // Register the ServiceWorker as soon as the app is stable
+      // or after 30 seconds (whichever comes first).
+      registrationStrategy: 'registerWhenStable:30000'
+    }),
+    ShareButtonsModule,
+    ShareIconsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

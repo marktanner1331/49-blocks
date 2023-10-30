@@ -46,6 +46,8 @@ export class BoardComponent implements OnInit, OnDestroy {
   undoCollapseDownDeltas: { [key: number]: number } = {};
   undoCollapseLeftDeltas: { [key: number]: number } = {};
 
+  hintTiles: { [key: number]: boolean } = {};
+
   postProcessSubscription!: SyncSubscription<GameCommand>;
 
   newGameAnimation: boolean = false;
@@ -53,12 +55,9 @@ export class BoardComponent implements OnInit, OnDestroy {
   undoCollapseLeftAnimation: boolean = false;
 
   styleSheet!: StyleSheet;
+  hintStylesheet!: StyleSheet;
 
   imageIndex: string = "0";
-
-  get canUndo(): boolean {
-    return this.currentGameService.previousGrid != undefined;
-  }
 
   constructor(
     private router: Router,
@@ -72,6 +71,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   processCommand(command: GameCommand) {
     switch (command.type) {
       case GameCommandType.NEW_GAME:
+      case GameCommandType.RESET:
         this.imageIndex = (Math.floor(Math.random() * 15) + 1).toString().padStart(2, "0");
 
         this.previousCollapseDownDeltas = {};
@@ -158,6 +158,8 @@ export class BoardComponent implements OnInit, OnDestroy {
         break;
       case GameCommandType.GROUP_REMOVED:
         this.grid = this.currentGameService.currentGame.grid.clone();
+        this.previousCollapseDownDeltas = {};
+        this.previousCollapseLeftDeltas = {};
 
         this.cdr.detectChanges();
 
@@ -178,7 +180,6 @@ export class BoardComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
 
           this.previousDownGrid = this.currentGameService.currentGame.grid.clone();
-
           setTimeout(() => this.endCollapse(), Math.sqrt(-highestDelta / 20) * 1000);
         } else {
           this.currentGameService.pushCommand(new GameCommand(GameCommandType.BOARD_ANIMATION_STARTED));
@@ -198,6 +199,23 @@ export class BoardComponent implements OnInit, OnDestroy {
           this.currentGameService.pushCommand(new GameCommand(GameCommandType.BOARD_ANIMATION_STARTED));
           this.currentGameService.pushCommand(new GameCommand(GameCommandType.BOARD_ANIMATION_FINISHED));
         }
+        break;
+      case GameCommandType.SHOW_HINT:
+        this.hintStylesheet = new StyleSheet();
+        let hintTile: [number, number] = this.currentGameService.currentGame.grid.findBestNextStep();
+        let hintGroup: [number, number][] = this.currentGameService.currentGame.grid.getColorGroup(hintTile[0], hintTile[1]);
+
+        for (let tile of hintGroup) {
+          let tileOffset = tile[0] * this.gridHeight + tile[1];
+          this.hintTiles[tileOffset] = true;
+        }
+
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.hintTiles = {};
+          this.hintStylesheet.destroy();
+          this.cdr.detectChanges();
+        }, 800);
         break;
     }
   }
@@ -254,7 +272,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 
     if (this.undoCollapseDownAnimation) {
       delta = this.undoCollapseDownDeltas[column * this.gridHeight + row];
-      
+
       if (delta) {
         let randomName = Guid.create().toString();
         this.styleSheet.addKeyFrame("keyframes-" + randomName, [
@@ -288,6 +306,31 @@ export class BoardComponent implements OnInit, OnDestroy {
       }
     }
 
+    if (this.hintStylesheet) {
+      let randomName = Guid.create().toString();
+      if (this.hintTiles[column * this.gridHeight + row]) {
+        this.hintStylesheet.addKeyFrame("keyframes-" + randomName, [
+          "0% {filter: brightness(1)}",
+          "70% {filter: brightness(2)}",
+          "100% {filter: brightness(1)}"
+        ]);
+      } else {
+        this.hintStylesheet.addKeyFrame("keyframes-" + randomName, [
+          "0% {filter: brightness(1)}",
+          "10% {filter: brightness(0.5)}",
+          "90% {filter: brightness(0.5)}",
+          "100% {filter: brightness(1)}"
+        ]);
+      }
+
+      this.hintStylesheet.addClass(".hint-" + randomName, {
+        animation: "keyframes-" + randomName + " 0.8s linear 0s normal forwards"
+      });
+
+      classes["hint-" + randomName] = true;
+    }
+
+
     return classes;
   }
 
@@ -310,7 +353,6 @@ export class BoardComponent implements OnInit, OnDestroy {
       this.collapseLeftDeltas = {};
     }
 
-    this.collapseLeftDeltas = {};
     this.grid = this.currentGameService.currentGame.grid.clone();
     this.styleSheet.destroy();
 

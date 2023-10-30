@@ -15,12 +15,30 @@ export class LevelSelectorComponent implements OnInit {
     private storage: StorageService,
     private currentGameService: CurrentGameService) { }
 
+  hideComplete: boolean = false;
+
   getRange(): number[] {
     let numbers:number[] = [];
-    for(let i = 1;i <= 100;i++) {
-      numbers.push(i);
+    let range: number = this.storage.currentLevel + 100;
+    range = range - (range % 100);
+    range = Math.min(range, 500);
+
+    for(let i = 1;i <= range;i++) {
+      if(this.hideComplete) {
+        if(this.storage.starCount(i) < 3) {
+          numbers.push(i);
+        }
+      } else {
+        numbers.push(i);
+      }
     }
+
     return numbers;
+  }
+
+  toggleHideComplete() {
+    this.hideComplete = !this.hideComplete;
+    this.cdr.detectChanges();
   }
 
   isPlayable(level:number) {

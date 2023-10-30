@@ -57,7 +57,6 @@ export class Grid {
     constructor(public width: number, public height: number, public tiles: TileColor[][]) {
     }
 
-    //returns the number of remaining blocks for the best solution
     findBestSolution(): number {
         let grids: [Grid, Solution|undefined][] = [];
         grids.push([this.clone(), undefined]);
@@ -70,6 +69,7 @@ export class Grid {
 
         let i = 300000;
         let j = 0;
+
         while (grids.length > 0) {
             j++;
             if(i-- == 0) {
@@ -81,11 +81,18 @@ export class Grid {
             let groups = grid[0].getAllColorGroups();
             if(groups.length == 0) {
                 //we have reached the end
-                if(grid[0].countRemainingBlocks() < bestScore) {
-                    bestScore = grid[0].countRemainingBlocks();
+                let remainingBlocks = grid[0].countRemainingBlocks();
+
+                if(remainingBlocks < bestScore) {
+                    bestScore = remainingBlocks;
                     bestSolution = grid[1];
+
+                    if(remainingBlocks == 0) {
+                        //we have solved the level
+                        break;
+                    }
                 }
-                
+
                 continue;
             }
             
@@ -114,7 +121,6 @@ export class Grid {
             }
         }
         
-        //console.log(j);
         let route: [number, number][] = [];
         while(bestSolution != undefined) {
             route.push([bestSolution.column, bestSolution.row]);
@@ -122,8 +128,80 @@ export class Grid {
         }
         route.reverse();
         console.log(route);
+        console.log(bestScore);
 
         return bestScore;
+    }
+
+    // returns the [column, row] for the best next step
+    findBestNextStep(): [number, number] {
+        let grids: [Grid, Solution|undefined][] = [];
+        grids.push([this.clone(), undefined]);
+
+        //start by setting to max value
+        let bestScore = this.width * this.height;
+        let bestSolution: Solution|undefined = undefined;
+
+        let gridSet: GridSet = new GridSet();
+
+        let i = 300000;
+        let j = 0;
+
+        while (grids.length > 0) {
+            j++;
+            if(i-- == 0) {
+                break;
+            }
+
+            let grid = grids.pop()!;
+
+            let groups = grid[0].getAllColorGroups();
+            if(groups.length == 0) {
+                //we have reached the end
+                let remainingBlocks = grid[0].countRemainingBlocks();
+
+                if(remainingBlocks < bestScore) {
+                    bestScore = remainingBlocks;
+                    bestSolution = grid[1];
+
+                    if(remainingBlocks == 0) {
+                        //we have solved the level
+                        break;
+                    }
+                }
+            }
+            
+            for(let group of groups) {
+                let subGrid = grid[0].clone();
+                subGrid.removeGroup(group.tiles);
+                subGrid.collapseGridDown();
+
+                //technically we could have two identical grids
+                //with the only difference being an empty column in the middle
+                //but in reality
+                //it's not gonna happen all that often
+                if(gridSet.contains(subGrid)) {
+                    continue;
+                }
+
+                subGrid.collapseGridLeft();
+                
+                gridSet.add(subGrid);
+
+                let newSolution: Solution = new Solution();
+                newSolution.previous = grid[1];
+                newSolution.column = group.seedColumn
+                newSolution.row = group.seedRow;
+                grids.push([subGrid, newSolution]);
+            }
+        }
+        
+        
+        while(bestSolution!.previous) {
+            bestSolution = bestSolution!.previous;
+        }
+
+        return [bestSolution!.column, bestSolution!.row];
     }
 
     countRemainingBlocks(): number {

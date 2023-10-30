@@ -1,3 +1,6 @@
+<img src="assets/icons/icon-512.png" />
 <h1>49 Blocks</h1>
 <span class="button" (click)="onPlayClick()">Play</span>
-<span class="button">How To Play</span>
+<span class="button" (click)="onHelpClick()">How To Play</span>
+<span class="button" (click)="onShareClick()">Share</span>
+<span *ngIf="isAndroid" class="button" (click)="onRateClick()">Rate</span>

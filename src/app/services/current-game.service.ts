@@ -37,7 +37,7 @@ export class CurrentGameService {
 
   boardInited() {
     this.isBoardInited = true;
-    if(this.commandQueue.length) {
+    if (this.commandQueue.length) {
       this.processCommand();
     }
   }
@@ -46,8 +46,9 @@ export class CurrentGameService {
     this.isBoardInited = false;
   }
 
-  newGame(level:number) {
+  newGame(level: number) {
     this.currentGame = new Game(7, 7, level);
+    this.currentGame.grid.findBestSolution();
     this.pushCommand(new GameCommand(GameCommandType.NEW_GAME));
   }
 
@@ -111,11 +112,18 @@ export class CurrentGameService {
   }
 
   undoHandler(command: GameCommand) {
-    if(command.type == GameCommandType.UNDO) {
-      this.currentGame.grid = this.previousGrid!;
-      this.previousGrid = undefined;
-    } else if(command.type == GameCommandType.NEW_GAME) {
-      this.previousGrid = undefined;
+    switch (command.type) {
+      case GameCommandType.UNDO:
+        this.currentGame.grid = this.previousGrid!;
+        this.previousGrid = undefined;
+        break;
+      case GameCommandType.NEW_GAME:
+        this.previousGrid = undefined;
+        break;
+      case GameCommandType.RESET:
+        this.currentGame = new Game(this.currentGame.grid.width, this.currentGame.grid.height, this.currentGame.levelNumber);
+        this.previousGrid = undefined;
+        break;
     }
   }
 

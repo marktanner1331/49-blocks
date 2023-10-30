@@ -30,7 +30,7 @@ export class GameOverComponent implements OnInit, OnDestroy {
     if(command.type == GameCommandType.GAME_COMPLETE) {
       this.visible = true;
       this.remainingBlocks = this.currentGameService.currentGame.grid.countRemainingBlocks();
-      this.canMoveNext = this.currentGameService.currentGame.levelNumber < 100 && this.remainingBlocks < 6;
+      this.canMoveNext = this.currentGameService.currentGame.levelNumber < 500 && this.remainingBlocks < 6;
 
       if(this.canMoveNext) {
         this.storageService.unlockLevel(this.currentGameService.currentGame.levelNumber + 1);
